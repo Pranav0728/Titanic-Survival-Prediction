@@ -29,6 +29,9 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+@app.get('/')
+def getvalue():
+    return {"message": "Hello, World!"}
 # Define the prediction endpoint
 @app.post('/predict')
 def predict(data: Survival):
