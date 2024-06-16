@@ -1,10 +1,8 @@
 import uvicorn
-from fastapi import FastAPI
+from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
-import numpy as np
 import pickle
-import pandas as pd
 
 # Define the Survival model
 class Survival(BaseModel):
@@ -17,8 +15,11 @@ class Survival(BaseModel):
 app = FastAPI()
 
 # Load the classifier
-pickle_in = open("titanic_model.pkl", "rb")
-classifier = pickle.load(pickle_in)
+try:
+    with open("titanic_model.pkl", "rb") as pickle_in:
+        classifier = pickle.load(pickle_in)
+except Exception as e:
+    raise RuntimeError(f"Failed to load model: {str(e)}")
 
 # Add CORS middleware
 app.add_middleware(
@@ -29,27 +30,32 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+# Root endpoint
 @app.get('/')
-def getvalue():
+def root():
     return {"message": "Hello, World!"}
-# Define the prediction endpoint
+
+# Prediction endpoint
 @app.post('/predict')
 def predict(data: Survival):
-    data = data.dict()
-    Age = data['Age']
-    Fare = data['Fare']
-    Sex = data['Sex']
-    Pclass = data['Pclass']
+    try:
+        # Extract data from request
+        Age = data.Age
+        Fare = data.Fare
+        Sex = data.Sex
+        Pclass = data.Pclass
+        
+        # Perform prediction
+        prediction = classifier.predict([[Age, Fare, Sex, Pclass]])
+        
+        # Process prediction result
+        result = "Survived" if prediction[0] > 0.5 else "Died"
+        
+        return {"prediction": result}
     
-    prediction = classifier.predict([[Age, Fare, Sex, Pclass]])
-    
-    if prediction[0] > 0.5:
-        result = 'Survived'
-    else:
-        result = "Died"
-    
-    return {"prediction": result}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
 
-# To run the app
+# Run the FastAPI app using uvicorn
 if __name__ == "__main__":
     uvicorn.run(app, host="127.0.0.1", port=8000)
