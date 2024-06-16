@@ -1,6 +1,5 @@
 {
     "build": {
-      "src": "/backend/main.py",
       "use": "@vercel/python"
     },
     "routes": [
