@@ -12,7 +12,7 @@ export default function Home() {
   const handleSubmit = async () => {
     const data = { Age, Fare, Sex, Pclass };
     try {
-      const response = await axios.post('http://localhost:8000/predict', data);
+      const response = await axios.post('https://titanic-survival-api.vercel.app/predict', data);
       setPrediction(response.data.prediction);
     } catch (error) {
       console.error('Error submitting data:', error);
