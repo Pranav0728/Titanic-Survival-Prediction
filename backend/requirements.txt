@@ -1,2 +1,4 @@
-uvicorn
 fastapi
+uvicorn
+pydantic
+scikit-learn
